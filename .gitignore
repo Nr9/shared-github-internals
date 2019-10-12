@@ -1,2 +1,5 @@
 /lib/
 /node_modules/
+/yarn-error.log
+/yalc.lock
+/.yalc

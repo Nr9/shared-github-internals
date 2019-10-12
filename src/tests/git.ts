@@ -190,15 +190,20 @@ const fetchContent = async ({
   repo: RepoName;
   ref: Ref;
 }) => {
-  const {
-    data: { content, encoding },
-  } = await octokit.repos.getContents({
+  const { data } = await octokit.repos.getContents({
     owner,
     path: filename,
     ref,
     repo,
   });
-  return Buffer.from(content, encoding).toString("utf8");
+  if (data instanceof Array) {
+    throw new Error(`array returned for ${owner}/${repo} ${ref} (unsupported)`);
+  } else if (!data.content) {
+    throw new Error(`no content returned for ${owner}/${repo} ${ref}`);
+  }
+  return Buffer.from(data.content, data.encoding as BufferEncoding).toString(
+    "utf8",
+  );
 };
 
 const fetchRefCommitsFromSha = async ({

@@ -1,36 +1,44 @@
 {
   "author": "Thibault Derousseaux <tibdex@gmail.com>",
+  "description": "Dependency used by GitHub-related repositories",
+  "peerDependencies": {
+    "@octokit/rest": "^16.33.1"
+  },
   "dependencies": {
-    "@octokit/rest": "^16.25.0",
     "@types/execa": "^0.9.0",
-    "@types/tempy": "^0.3.0",
-    "@types/uuid": "^3.4.4",
+    "@types/uuid": "^3.4.5",
     "envalid": "^5.0.0",
     "execa": "^1.0.0",
     "tempy": "^0.3.0",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.3"
   },
-  "description": "Dependency used by GitHub-related repositories",
   "devDependencies": {
-    "prettier": "^1.17.0",
-    "tslint": "^5.16.0",
+    "@octokit/rest": "^16.33.1",
+    "prettier": "^1.18.2",
+    "tslint": "^5.20.0",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.6.4"
   },
   "engines": {
-    "node": ">= 6.11.2"
+    "node": "10"
   },
   "files": [
-    "lib/"
+    "lib/",
+    "src/"
   ],
   "license": "MIT",
-  "name": "shared-github-internals",
-  "repository": "github:tibdex/shared-github-internals",
+  "main": "lib",
+  "name": "@nr9/shared-github-internals",
+  "repository": "github:Nr9/shared-github-internals",
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "yarn build",
-    "prettier": "prettier --ignore-path .gitignore \"**/*.{js,json,md,ts,yml}\"",
-    "tslint": "tslint --format stylish --project ."
+    "build": "tsc --build tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "prettier": "prettier -c \"**/*.{js,json,md,ts,yml}\"",
+    "tslint": "tslint --format stylish --project .",
+    "lint": "npm run tslint && npm run prettier"
   },
-  "version": "1.1.2"
+  "version": "2.0.1",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  }
 }

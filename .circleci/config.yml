@@ -6,15 +6,11 @@ jobs:
       - image: circleci/node:10
     steps:
       - checkout
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
-      - run: yarn run tslint
-      - run: yarn run prettier --list-different
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
 
 workflows:
   check:
     jobs:
-      - check:
-          filters:
-            branches:
-              ignore: master
+      - check
