@@ -46,16 +46,21 @@ const fetchRefSha = async ({
   ref: Ref;
   repo: RepoName;
 }): Promise<Sha> => {
-  const {
-    data: {
-      object: { sha },
-    },
-  } = await octokit.git.getRef({
-    owner,
-    ref: getHeadRef(ref),
-    repo,
-  });
-  return sha;
+  try {
+    const {
+      data: {
+        object: { sha },
+      },
+    } = await octokit.git.getRef({
+      owner,
+      ref: getHeadRef(ref),
+      repo,
+    });
+    return sha;
+  } catch (e) {
+    console.error(`could not fetchRefSha ${owner}/${repo} [${ref}]`, e);
+    throw new Error(`could not fetchRefSha ${owner}/${repo} [${ref}]`);
+  }
 };
 
 const updateRef = async ({
@@ -73,13 +78,18 @@ const updateRef = async ({
   repo: RepoName;
   sha: Sha;
 }): Promise<void> => {
-  await octokit.git.updateRef({
-    force,
-    owner,
-    ref: getHeadRef(ref),
-    repo,
-    sha,
-  });
+  try {
+    await octokit.git.updateRef({
+      force,
+      owner,
+      ref: getHeadRef(ref),
+      repo,
+      sha,
+    });
+  } catch (e) {
+    console.error(`could not updateRef ${owner}/${repo} [${ref}]`, e);
+    throw new Error(`could not updateRef ${owner}/${repo} [${ref}]`);
+  }
 };
 
 const deleteRef = async ({
@@ -93,11 +103,16 @@ const deleteRef = async ({
   ref: Ref;
   repo: RepoName;
 }): Promise<void> => {
-  await octokit.git.deleteRef({
-    owner,
-    ref: getHeadRef(ref),
-    repo,
-  });
+  try {
+    await octokit.git.deleteRef({
+      owner,
+      ref: getHeadRef(ref),
+      repo,
+    });
+  } catch (e) {
+    console.error(`could not deleteRef ${owner}/${repo} [${ref}]`, e);
+    throw new Error(`could not deleteRef ${owner}/${repo} [${ref}]`);
+  }
 };
 
 const createRef = async ({
@@ -113,12 +128,17 @@ const createRef = async ({
   repo: RepoName;
   sha: Sha;
 }): Promise<void> => {
-  await octokit.git.createRef({
-    owner,
-    ref: getFullyQualifiedRef(ref),
-    repo,
-    sha,
-  });
+  try {
+    await octokit.git.createRef({
+      owner,
+      ref: getFullyQualifiedRef(ref),
+      repo,
+      sha,
+    });
+  } catch (e) {
+    console.error(`could not createRef ${owner}/${repo} [${ref}]`, e);
+    throw new Error(`could not createRef ${owner}/${repo} [${ref}]`);
+  }
 };
 
 const createTemporaryRef = async ({
@@ -215,13 +235,23 @@ const fetchCommitsDetails = async ({
   pullRequestNumber: PullRequestNumber;
   repo: RepoName;
 }): Promise<CommitDetails[]> => {
-  const options = octokit.pulls.listCommits.endpoint.merge({
-    owner,
-    pull_number: pullRequestNumber,
-    repo,
-  });
-  const commits = await octokit.paginate(options);
-  return commits.map(getCommitsDetails);
+  try {
+    const options = octokit.pulls.listCommits.endpoint.merge({
+      owner,
+      pull_number: pullRequestNumber,
+      repo,
+    });
+    const commits = await octokit.paginate(options);
+    return commits.map(getCommitsDetails);
+  } catch (e) {
+    console.error(
+      `could not fetchCommitsDetails ${owner}/${repo} for PR [${pullRequestNumber}]`,
+      e,
+    );
+    throw new Error(
+      `could not fetchCommitsDetails ${owner}/${repo} for PR [${pullRequestNumber}]`,
+    );
+  }
 };
 
 const fetchCommits = async ({

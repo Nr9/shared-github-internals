@@ -63,14 +63,19 @@ const createBlob = async ({
   owner: RepoOwner;
   repo: RepoName;
 }) => {
-  const {
-    data: { sha },
-  } = await octokit.git.createBlob({
-    content,
-    owner,
-    repo,
-  });
-  return sha;
+  try {
+    const {
+      data: { sha },
+    } = await octokit.git.createBlob({
+      content,
+      owner,
+      repo,
+    });
+    return sha;
+  } catch (e) {
+    console.error(`could not create Blob ${owner}/${repo}`, e);
+    throw new Error(`could not create Blob ${owner}/${repo}`);
+  }
 };
 
 const createTree = async ({
@@ -84,21 +89,26 @@ const createTree = async ({
   owner: RepoOwner;
   repo: RepoName;
 }) => {
-  const {
-    data: { sha: treeSha },
-  } = await octokit.git.createTree({
-    owner,
-    repo,
-    tree: [
-      {
-        mode: "100644",
-        path: filename,
-        sha: blob,
-        type: "blob",
-      },
-    ],
-  });
-  return treeSha;
+  try {
+    const {
+      data: { sha: treeSha },
+    } = await octokit.git.createTree({
+      owner,
+      repo,
+      tree: [
+        {
+          mode: "100644",
+          path: filename,
+          sha: blob,
+          type: "blob",
+        },
+      ],
+    });
+    return treeSha;
+  } catch (e) {
+    console.error(`could not create Tree ${owner}/${repo}`, e);
+    throw new Error(`could not create Tree ${owner}/${repo}`);
+  }
 };
 
 const createCommit = async ({
@@ -116,16 +126,21 @@ const createCommit = async ({
   repo: RepoName;
   tree: Sha;
 }) => {
-  const {
-    data: { sha },
-  } = await octokit.git.createCommit({
-    message,
-    owner,
-    parents: parent == null ? [] : [parent],
-    repo,
-    tree,
-  });
-  return sha;
+  try {
+    const {
+      data: { sha },
+    } = await octokit.git.createCommit({
+      message,
+      owner,
+      parents: parent == null ? [] : [parent],
+      repo,
+      tree,
+    });
+    return sha;
+  } catch (e) {
+    console.error(`could not create Commit ${owner}/${repo}`, e);
+    throw new Error(`could not create Commit ${owner}/${repo}`);
+  }
 };
 
 const createCommitFromLinesAndMessage = async ({
@@ -167,16 +182,21 @@ const createPullRequest = async ({
   owner: RepoOwner;
   repo: RepoName;
 }): Promise<PullRequestNumber> => {
-  const {
-    data: { number: pullRequestNumber },
-  } = await octokit.pulls.create({
-    base,
-    head,
-    owner,
-    repo,
-    title: "Untitled",
-  });
-  return pullRequestNumber;
+  try {
+    const {
+      data: { number: pullRequestNumber },
+    } = await octokit.pulls.create({
+      base,
+      head,
+      owner,
+      repo,
+      title: "Untitled",
+    });
+    return pullRequestNumber;
+  } catch (e) {
+    console.error(`could not create PR ${owner}/${repo}`, e);
+    throw new Error(`could not create PR ${owner}/${repo}`);
+  }
 };
 
 const fetchContent = async ({
@@ -190,20 +210,26 @@ const fetchContent = async ({
   repo: RepoName;
   ref: Ref;
 }) => {
-  const { data } = await octokit.repos.getContents({
-    owner,
-    path: filename,
-    ref,
-    repo,
-  });
-  if (data instanceof Array) {
-    throw new Error(`array returned for ${owner}/${repo} ${ref} (unsupported)`);
-  } else if (!data.content) {
-    throw new Error(`no content returned for ${owner}/${repo} ${ref}`);
+  try {
+    const { data } = await octokit.repos.getContents({
+      owner,
+      path: filename,
+      ref,
+      repo,
+    });
+    if (data instanceof Array) {
+      throw new Error(
+        `array returned for ${owner}/${repo} ${ref} (unsupported)`,
+      );
+    } else if (!data.content) {
+      throw new Error(`no content returned for ${owner}/${repo} ${ref}`);
+    }
+    const encoding = data.encoding as BufferEncoding;
+    return Buffer.from(data.content, encoding).toString("utf8");
+  } catch (e) {
+    console.error(`could not fetchContent ${owner}/${repo} [${ref}]`, e);
+    throw new Error(`could not fetchContent ${owner}/${repo} [${ref}]`);
   }
-  return Buffer.from(data.content, data.encoding as BufferEncoding).toString(
-    "utf8",
-  );
 };
 
 const fetchRefCommitsFromSha = async ({
@@ -219,23 +245,33 @@ const fetchRefCommitsFromSha = async ({
 }): Promise<RefState> => {
   const content = await fetchContent({ octokit, owner, ref: sha, repo });
 
-  const {
-    data: { message, parents },
-  } = await octokit.git.getCommit({ commit_sha: sha, owner, repo });
+  try {
+    const {
+      data: { message, parents },
+    } = await octokit.git.getCommit({ commit_sha: sha, owner, repo });
 
-  const commit = { lines: getLines(content), message };
+    const commit = { lines: getLines(content), message };
 
-  if (parents.length !== 0) {
-    const commits = await fetchRefCommitsFromSha({
-      octokit,
-      owner,
-      repo,
-      sha: parents[0].sha,
-    });
-    return [...commits, commit];
+    if (parents.length !== 0) {
+      const commits = await fetchRefCommitsFromSha({
+        octokit,
+        owner,
+        repo,
+        sha: parents[0].sha,
+      });
+      return [...commits, commit];
+    }
+
+    return [commit];
+  } catch (e) {
+    console.error(
+      `could not fetchRefCommitsFromSha ${owner}/${repo} [${sha}]`,
+      e,
+    );
+    throw new Error(
+      `could not fetchRefCommitsFromSha ${owner}/${repo} [${sha}]`,
+    );
   }
-
-  return [commit];
 };
 
 const fetchRefCommits = async ({

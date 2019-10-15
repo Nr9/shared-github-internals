@@ -37,7 +37,7 @@
     "tslint": "tslint --format stylish --project .",
     "lint": "npm run tslint && npm run prettier"
   },
-  "version": "2.0.1",
+  "version": "2.0.2",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   }
